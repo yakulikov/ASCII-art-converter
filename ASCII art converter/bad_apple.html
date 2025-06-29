@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>bad apple</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .monospace {
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <input type="button" value="Start" onclick="startPolling()">
+    <input type="button" value="Stop" onclick="stopPolling()">
+    <input id="resolution" type="number" placeholder="Resolution">
+    <input id="region" type="text" placeholder="Region">
+    <pre id="brailleImage"></pre>
+
+    <script>
+        let intervalId; // Declare intervalId variable outside function scope
+        let sessionId = 0
+        async function startPolling() {
+            // Clear previous interval if exists
+            sessionId++;
+            let currentSession = sessionId;
+
+            let resolution = document.querySelector("#resolution").value || 10000;
+            let region = document.querySelector("#region").value || "1028,180,1830,780"
+        
+            while(sessionId == currentSession){
+                await getBrailleImage(resolution, region);
+            }
+        }
+
+        function stopPolling() {
+            // Clear the current polling interval if it exists
+            sessionId++;
+        }
+
+        async function getBrailleImage(resolution, region) {
+            return fetch(`http://localhost:8000/get_image_stream?resolution=${resolution}&region=${region}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    // Update the content of <pre> with the received message
+                    document.getElementById('brailleImage').innerText = data;
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                });
+        }
+    </script>
+</body>
+</html>
